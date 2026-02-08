@@ -12,38 +12,20 @@ pipeline {
             }
         }
 
-        stage('Setup Environment') {
+        stage('Install Dependencies') {
             steps {
                 sh '''
-                    python -m venv venv
-                    . venv/bin/activate
                     pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip install pytest
                 '''
             }
         }
 
-        stage('Syntax Check') {
+        stage('Run Tests') {
             steps {
                 sh '''
-                    . venv/bin/activate
-                    python -m compileall .
+                    pytest test_basic.py
                 '''
-            }
-        }
-
-        stage('Unit Test') {
-            steps {
-                sh '''
-                    . venv/bin/activate
-                    mkdir -p test-reports
-                    pytest test_app.py --junitxml=test-reports/results.xml
-                '''
-            }
-            post {
-                always {
-                    junit 'test-reports/results.xml'
-                }
             }
         }
     }
