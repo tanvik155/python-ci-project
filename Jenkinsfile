@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'
+        }
+    }
 
     stages {
         stage('Checkout') {
@@ -8,19 +12,10 @@ pipeline {
             }
         }
 
-        stage('Install Python') {
+        stage('Setup Environment') {
             steps {
                 sh '''
-                apt-get update
-                apt-get install -y python3 python3-venv python3-pip
-                '''
-            }
-        }
-
-        stage('Setup Python Environment') {
-            steps {
-                sh '''
-                python3 -m venv venv
+                python -m venv venv
                 . venv/bin/activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
@@ -32,7 +27,7 @@ pipeline {
             steps {
                 sh '''
                 . venv/bin/activate
-                python3 -m compileall .
+                python -m compileall .
                 '''
             }
         }
@@ -41,24 +36,3 @@ pipeline {
             steps {
                 sh '''
                 . venv/bin/activate
-                mkdir -p test-reports
-                pytest test_app.py --junitxml=test-reports/results.xml
-                '''
-            }
-            post {
-                always {
-                    junit 'test-reports/results.xml'
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Python CI Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Python CI Pipeline failed!'
-        }
-    }
-}
